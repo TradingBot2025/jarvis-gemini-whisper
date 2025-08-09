@@ -130,7 +130,7 @@ const JarvisChat: React.FC<JarvisChatProps> = ({ onProcessingChange, newCommand 
   };
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="h-full flex flex-col gap-4 max-h-screen overflow-hidden">
       {/* Voice Response Component */}
       <VoiceResponse 
         text={currentSpeakingMessage}
@@ -141,105 +141,131 @@ const JarvisChat: React.FC<JarvisChatProps> = ({ onProcessingChange, newCommand 
       {/* ElevenLabs Setup */}
       <ElevenLabsSetup onApiKeySet={setElevenLabsApiKey} />
       
-      <Card className="flex-1 bg-card/50 border-primary/20 flex flex-col">
-        <CardHeader className="pb-3">
+      <Card className="flex-1 bg-card/50 backdrop-blur-sm border-primary/30 flex flex-col shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all duration-300 overflow-hidden">
+        <CardHeader className="pb-3 border-b border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
           <CardTitle className="text-primary flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Bot className="w-5 h-5" />
-              JARVIS Command Interface
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Bot className="w-6 h-6 animate-pulse" />
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-ping" />
+              </div>
+              <span className="text-lg font-bold tracking-wide">JARVIS Command Interface</span>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200 hover:scale-105"
             >
               {isVoiceEnabled ? (
-                <Volume2 className="w-4 h-4" />
+                <Volume2 className="w-5 h-5 text-green-400" />
               ) : (
-                <VolumeX className="w-4 h-4" />
+                <VolumeX className="w-5 h-5 text-red-400" />
               )}
             </Button>
           </CardTitle>
         </CardHeader>
-      <CardContent className="p-0 flex-1 flex flex-col min-h-0">
-        {/* Messages */}
-        <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex items-start gap-3 ${
-                  message.type === 'user' ? 'flex-row-reverse' : ''
-                }`}
-              >
-                <div className={`
-                  w-8 h-8 rounded-full flex items-center justify-center
-                  ${message.type === 'user' 
-                    ? 'bg-accent text-accent-foreground' 
-                    : 'bg-primary text-primary-foreground'
-                  }
-                `}>
-                  {message.type === 'user' ? (
-                    <User className="w-4 h-4" />
-                  ) : (
-                    <Bot className="w-4 h-4" />
-                  )}
-                </div>
-                <div className={`
-                  max-w-[80%] rounded-lg p-3
-                  ${message.type === 'user'
-                    ? 'bg-accent text-accent-foreground'
-                    : 'bg-primary/10 text-foreground border border-primary/20'
-                  }
-                `}>
-                  <p className="text-sm">{message.content}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {message.timestamp.toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            ))}
-            {isProcessing && (
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                  <Bot className="w-4 h-4" />
-                </div>
-                <div className="bg-primary/10 text-foreground border border-primary/20 rounded-lg p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                    </div>
-                    <span className="text-sm">Processing...</span>
+        
+        <CardContent className="p-0 flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* Messages */}
+          <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+            <div className="space-y-4">
+              {messages.map((message, index) => (
+                <div
+                  key={message.id}
+                  className={`flex items-start gap-3 animate-fade-in ${
+                    message.type === 'user' ? 'flex-row-reverse' : ''
+                  }`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className={`
+                    w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110
+                    ${message.type === 'user' 
+                      ? 'bg-gradient-to-br from-accent to-accent/80 text-accent-foreground ring-2 ring-accent/20' 
+                      : 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground ring-2 ring-primary/20 animate-pulse-glow'
+                    }
+                  `}>
+                    {message.type === 'user' ? (
+                      <User className="w-5 h-5" />
+                    ) : (
+                      <Bot className="w-5 h-5" />
+                    )}
+                  </div>
+                  <div className={`
+                    max-w-[75%] rounded-xl p-4 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl
+                    ${message.type === 'user'
+                      ? 'bg-gradient-to-br from-accent/90 to-accent text-accent-foreground border border-accent/30'
+                      : 'bg-gradient-to-br from-primary/10 to-primary/5 text-foreground border border-primary/30 backdrop-blur-sm'
+                    }
+                  `}>
+                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    <p className="text-xs opacity-70 mt-2 flex items-center gap-1">
+                      <div className="w-1 h-1 bg-current rounded-full animate-pulse" />
+                      {message.timestamp.toLocaleTimeString()}
+                    </p>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+              ))}
+              {isProcessing && (
+                <div className="flex items-start gap-3 animate-fade-in">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg ring-2 ring-primary/20 animate-pulse-glow">
+                    <Bot className="w-5 h-5" />
+                  </div>
+                  <div className="bg-gradient-to-br from-primary/10 to-primary/5 text-foreground border border-primary/30 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                      </div>
+                      <span className="text-sm font-medium">Processing neural networks...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
 
-        {/* Input */}
-        <div className="p-4 border-t border-border">
-          <div className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type your command or use voice..."
-              disabled={isProcessing}
-              className="flex-1"
-            />
-            <Button
-              onClick={handleSend}
-              disabled={!input.trim() || isProcessing}
-              size="sm"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+          {/* Input */}
+          <div className="p-4 border-t border-primary/20 bg-gradient-to-r from-background/50 to-background/80 backdrop-blur-sm">
+            <div className="flex gap-3">
+              <div className="relative flex-1">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type your command or use voice..."
+                  disabled={isProcessing}
+                  className="pr-12 bg-background/50 border-primary/30 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-300 hover:border-primary/40"
+                />
+                {input && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                  </div>
+                )}
+              </div>
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || isProcessing}
+                size="sm"
+                className="px-4 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {/* Status Bar */}
+            <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${isProcessing ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`} />
+                <span>{isProcessing ? 'AI Processing...' : 'Ready for commands'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>Neural Network: Online</span>
+                <div className="w-1 h-1 bg-green-400 rounded-full animate-ping" />
+              </div>
+            </div>
           </div>
-        </div>
         </CardContent>
       </Card>
     </div>
