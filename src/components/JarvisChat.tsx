@@ -3,31 +3,40 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, Volume2, VolumeX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { geminiService } from '@/services/geminiService';
+import ElevenLabsSetup from '@/components/ElevenLabsSetup';
+import VoiceResponse from '@/components/VoiceResponse';
 
 interface Message {
   id: string;
   type: 'user' | 'jarvis';
   content: string;
   timestamp: Date;
+  shouldSpeak?: boolean;
 }
 
 interface JarvisChatProps {
   onProcessingChange: (processing: boolean) => void;
+  newCommand?: string;
 }
 
-const JarvisChat: React.FC<JarvisChatProps> = ({ onProcessingChange }) => {
+const JarvisChat: React.FC<JarvisChatProps> = ({ onProcessingChange, newCommand }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'jarvis',
-      content: 'Hello! I am JARVIS, your AI assistant. How can I help you today?',
-      timestamp: new Date()
+      content: 'Hello! I am JARVIS, your AI assistant powered by Gemini AI. How can I help you today?',
+      timestamp: new Date(),
+      shouldSpeak: true
     }
   ]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [elevenLabsApiKey, setElevenLabsApiKey] = useState<string | null>(null);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
+  const [currentSpeakingMessage, setCurrentSpeakingMessage] = useState<string>('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -41,6 +50,13 @@ const JarvisChat: React.FC<JarvisChatProps> = ({ onProcessingChange }) => {
     }
   }, [messages]);
 
+  // Handle new voice commands
+  useEffect(() => {
+    if (newCommand && newCommand.trim()) {
+      processCommand(newCommand.trim());
+    }
+  }, [newCommand]);
+
   const processCommand = async (command: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -52,31 +68,51 @@ const JarvisChat: React.FC<JarvisChatProps> = ({ onProcessingChange }) => {
     setMessages(prev => [...prev, userMessage]);
     setIsProcessing(true);
 
-    // Simulate AI processing (replace with actual Gemini API call)
-    setTimeout(() => {
-      const responses = [
-        "I understand your command. In a full implementation, I would integrate with Gemini AI to process this request.",
-        "Command received and processed. This is a demonstration of the JARVIS interface.",
-        "I'm processing your request. In a real system, this would connect to external APIs and services.",
-        "Command acknowledged. The full version would have PC control capabilities through system integrations.",
-        "Request received. I would typically analyze this with Gemini AI and execute the appropriate actions."
-      ];
-
+    try {
+      // Use Gemini AI for intelligent responses
+      const aiResponse = await geminiService.generateJarvisResponse(command);
+      
       const jarvisMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'jarvis',
-        content: responses[Math.floor(Math.random() * responses.length)],
-        timestamp: new Date()
+        content: aiResponse,
+        timestamp: new Date(),
+        shouldSpeak: true
       };
 
       setMessages(prev => [...prev, jarvisMessage]);
-      setIsProcessing(false);
+      
+      // Trigger voice response
+      if (isVoiceEnabled) {
+        setCurrentSpeakingMessage(aiResponse);
+      }
 
       toast({
-        title: "Command Processed",
-        description: "JARVIS has processed your command.",
+        title: "JARVIS",
+        description: "Response generated using Gemini AI",
       });
-    }, 2000);
+
+    } catch (error) {
+      console.error('Error processing command:', error);
+      
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'jarvis',
+        content: "I apologize, but I'm experiencing some technical difficulties. Please try again.",
+        timestamp: new Date(),
+        shouldSpeak: true
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+      
+      toast({
+        title: "Error",
+        description: "Failed to process command. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSend = () => {
@@ -94,14 +130,39 @@ const JarvisChat: React.FC<JarvisChatProps> = ({ onProcessingChange }) => {
   };
 
   return (
-    <Card className="h-full bg-card/50 border-primary/20">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-primary flex items-center gap-2">
-          <Bot className="w-5 h-5" />
-          JARVIS Command Interface
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0 h-full flex flex-col">
+    <div className="h-full flex flex-col gap-4">
+      {/* Voice Response Component */}
+      <VoiceResponse 
+        text={currentSpeakingMessage}
+        apiKey={elevenLabsApiKey}
+        isEnabled={isVoiceEnabled}
+      />
+      
+      {/* ElevenLabs Setup */}
+      <ElevenLabsSetup onApiKeySet={setElevenLabsApiKey} />
+      
+      <Card className="flex-1 bg-card/50 border-primary/20 flex flex-col">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-primary flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bot className="w-5 h-5" />
+              JARVIS Command Interface
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {isVoiceEnabled ? (
+                <Volume2 className="w-4 h-4" />
+              ) : (
+                <VolumeX className="w-4 h-4" />
+              )}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+      <CardContent className="p-0 flex-1 flex flex-col min-h-0">
         {/* Messages */}
         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
           <div className="space-y-4">
@@ -179,8 +240,9 @@ const JarvisChat: React.FC<JarvisChatProps> = ({ onProcessingChange }) => {
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

@@ -7,9 +7,11 @@ import { useVoiceCommand } from '@/hooks/useVoiceCommand';
 const Index = () => {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentCommand, setCurrentCommand] = useState<string>('');
   const { processVoiceCommand } = useVoiceCommand();
 
   const handleVoiceCommand = (command: string) => {
+    setCurrentCommand(command);
     processVoiceCommand(command);
   };
 
@@ -76,7 +78,10 @@ const Index = () => {
 
           {/* Right Panel - Chat Interface */}
           <div className="lg:col-span-1 h-full">
-            <JarvisChat onProcessingChange={setIsProcessing} />
+            <JarvisChat 
+              onProcessingChange={setIsProcessing} 
+              newCommand={currentCommand}
+            />
           </div>
         </div>
       </div>
