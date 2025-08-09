@@ -83,17 +83,28 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand, onListeningC
     };
   }, [onCommand, onListeningChange, toast]);
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
     if (!recognitionRef.current) return;
 
     if (isListening) {
       recognitionRef.current.stop();
     } else {
-      recognitionRef.current.start();
-      toast({
-        title: "Voice Recognition Active",
-        description: "Listening for your commands...",
-      });
+      try {
+        // Request microphone permission
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        recognitionRef.current.start();
+        toast({
+          title: "Voice Recognition Active",
+          description: "Listening for your commands...",
+        });
+      } catch (error) {
+        console.error('Microphone permission denied:', error);
+        toast({
+          title: "Microphone Access Required",
+          description: "Please allow microphone access to use voice commands.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
