@@ -16,7 +16,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   reload: () => ipcRenderer.invoke('system:reload'),
   
   sendMessage: (channel, data) => {
-    // Whitelist channels
     let validChannels = ['toMain'];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
@@ -26,7 +25,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMessage: (channel, func) => {
     let validChannels = ['fromMain'];
     if (validChannels.includes(channel)) {
-      // Deliberately strip event as it includes `sender` 
       ipcRenderer.on(channel, (event, ...args) => func(...args));
     }
   }

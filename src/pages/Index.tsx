@@ -10,9 +10,11 @@ const Index = () => {
   const [currentCommand, setCurrentCommand] = useState<string>('');
   const { processVoiceCommand } = useVoiceCommand();
 
-  const handleVoiceCommand = (command: string) => {
-    setCurrentCommand(command);
-    processVoiceCommand(command);
+  const handleVoiceCommand = async (command: string) => {
+    const result = await processVoiceCommand(command);
+    if (!result.handledBySystem) {
+      setCurrentCommand(command);
+    }
   };
 
   return (
@@ -38,9 +40,16 @@ const Index = () => {
             />
             
             <div className="text-center text-xs text-muted-foreground space-y-1">
-              <p>💡 This is a web-based demo of JARVIS interface</p>
+              <p>💡 JARVIS voice assistant with AI</p>
               <p>🎤 Use voice commands or type messages</p>
-              <p>⚡ Full PC control requires system-level integration</p>
+              {typeof window !== 'undefined' && window.electronAPI ? (
+                <>
+                  <p className="text-primary font-medium">⚡ PC control active — open apps, search, minimize</p>
+                  <p className="text-muted-foreground">Try: &quot;open calculator&quot;, &quot;search weather&quot;, &quot;minimize&quot;</p>
+                </>
+              ) : (
+                <p>⚡ Run <code className="bg-muted px-1 rounded">npm run electron:dev</code> for PC control</p>
+              )}
             </div>
           </div>
 

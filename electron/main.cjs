@@ -27,7 +27,7 @@ function createWindow() {
       contextIsolation: true,
       enableRemoteModule: false,
       webSecurity: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.cjs')
     },
     titleBarStyle: 'default',
     show: false,
@@ -159,5 +159,7 @@ app.on('activate', () => {
 
 // Handle app protocol for dev
 if (isDev) {
-  if (require('electron-squirrel-startup')) app.quit();
+  try {
+    if (require('electron-squirrel-startup')) app.quit();
+  } catch (_) {}
 }
